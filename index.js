@@ -25,22 +25,59 @@ async function run() {
 
     const coffeeCollection = client.db("coffeeDB").collection("coffee");
 
-    app.get("/coffee", async (req, res) => {
-      const cursor = coffeeCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
+    // create
     app.post("/coffee", async (req, res) => {
       const newCoffee = req.body;
       const result = await coffeeCollection.insertOne(newCoffee);
       res.send(result);
     });
 
+    // read
+    app.get("/coffee", async (req, res) => {
+      const cursor = coffeeCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // update url part
+    app.get("/coffee/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coffeeCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update functionality part
+    app.put("/coffee/:id", async (req, res) => {
+      const id = req.params.id;
+      const coffee = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updatedCoffee = {
+        $set: {
+          name: coffee.name,
+          quantity: coffee.quantity,
+          supplier: coffee.supplier,
+          taste: coffee.taste,
+          category: coffee.category,
+          details: coffee.details,
+          photo: coffee.photo,
+        },
+      };
+
+      const result = await coffeeCollection.updateOne(
+        filter,
+        updatedCoffee,
+        options
+      );
+      res.send(result);
+    });
+
     // delete
     app.delete("/coffee/:id", async (req, res) => {
       const id = req.params.id;
-      console.log("Delete data for", id);
       const query = { _id: new ObjectId(id) };
       const result = await coffeeCollection.deleteOne(query);
       res.send(result);
